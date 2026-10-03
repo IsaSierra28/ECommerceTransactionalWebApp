@@ -1,0 +1,22 @@
+# Compressed files (they are uploaded to LEA, not to GitHub)
+*.zip
+
+# Files with secrets (never upload)
+.env
+*.env
+
+# Java / Maven (for the backend later)
+target/
+
+# Node / React (for the frontend later)
+node_modules/
+dist/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Windows temporary files
+Thumbs.db
+desktop.ini
