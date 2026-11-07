@@ -127,6 +127,58 @@ detects the conflict with its locks) and is rolled back with HTTP 409, so the in
 400 (invalid input), 401 (not logged in), 403 (role not allowed), 404 (not found),
 409 (insufficient inventory or payment, duplicated data, concurrent purchase), 500 (unexpected error).
 
+## Quiz 3 - User Interface (frontend)
+
+The folder `frontend/` contains the user interface made with **Vite + React + TypeScript + React Bootstrap**.
+It uses **React Router** for the pages and calls the REST API of the backend.
+
+### Frontend Setup
+
+Requirements: Node.js 20 or above. The backend must be running on `http://localhost:8080`.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173** and log in with a test account.
+
+### Pages
+
+| Page | Who | What it does |
+|---|---|---|
+| Login | Everybody | Login with username and password (HTTP Basic) |
+| Products | Everybody | List and filter products. CUSTOMER: add to cart. ADMIN/VENDOR: create, edit, delete |
+| Cart (checkout) | CUSTOMER | Cart, shipping address, payment (credit card or bank transfer), result COMMIT (invoice) or ROLLBACK |
+| Orders | Logged users | Orders with their invoice and payment |
+| Vendors | ADMIN | Create, activate/deactivate and delete vendors |
+| Customers | ADMIN | Create and delete customers |
+
+### Frontend Structure
+
+```text
+frontend/src/
+├── components/   AppNavbar, ProtectedRoute, ProductFormModal, AccountFormModal, InvoiceCard
+├── pages/        LoginPage, ProductsPage, CheckoutPage, OrdersPage, VendorsPage, CustomersPage
+├── services/     api.ts (all the calls to the REST API)
+├── types/        index.ts (TypeScript types that match the backend DTOs)
+├── hooks/        useAuth (logged user), useCart (shopping cart)
+├── validation/   validators.ts (frontend validation)
+└── App.tsx       routes
+```
+
+### Frontend Validation
+
+Every form is validated in the browser before calling the API, with a clear message under each field
+(required fields, valid email, price greater than 0, quantity 0 or more, card number with 16 digits,
+expiry date MM/YY, CVV with 3 digits, etc.). The backend validates everything again, because frontend
+validation is not enough for security or data integrity. Business rules (enough inventory, payment covers
+the total) are checked only by the backend, so the UI shows the ROLLBACK message when they fail.
+
+Hiding pages and buttons by role in React is only for a better experience: the real authorization is
+done by Spring Security in the backend.
+
 ## Test Accounts
 
 All test users have the password `Password123!` (saved encrypted with BCrypt).
