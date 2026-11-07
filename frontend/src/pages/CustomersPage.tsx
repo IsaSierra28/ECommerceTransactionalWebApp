@@ -7,7 +7,8 @@ import AccountFormModal from "../components/AccountFormModal";
 // ADMIN: list, create and delete customers
 function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  // Form: undefined = closed, null = new customer, Customer = edit
+  const [editing, setEditing] = useState<Customer | null | undefined>(undefined);
   const [message, setMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
 
   const loadCustomers = () => {
@@ -33,7 +34,7 @@ function CustomersPage() {
     <Container>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Customers</h1>
-        <Button onClick={() => setShowForm(true)}>+ New customer</Button>
+        <Button onClick={() => setEditing(null)}>+ New customer</Button>
       </div>
 
       {message && <Alert variant={message.type} dismissible onClose={() => setMessage(null)}>{message.text}</Alert>}
@@ -49,7 +50,8 @@ function CustomersPage() {
               <td>{c.username}</td>
               <td>{c.email}</td>
               <td>{c.phone ?? "-"}</td>
-              <td>
+              <td className="d-flex gap-2">
+                <Button size="sm" variant="outline-primary" onClick={() => setEditing(c)}>Edit</Button>
                 <Button size="sm" variant="outline-danger" onClick={() => handleDelete(c)}>Delete</Button>
               </td>
             </tr>
@@ -57,13 +59,14 @@ function CustomersPage() {
         </tbody>
       </Table>
 
-      {showForm && (
+      {editing !== undefined && (
         <AccountFormModal
           type="CUSTOMER"
-          onClose={() => setShowForm(false)}
+          account={editing}
+          onClose={() => setEditing(undefined)}
           onSaved={() => {
-            setShowForm(false);
-            setMessage({ type: "success", text: "The customer was created" });
+            setMessage({ type: "success", text: `The customer was ${editing ? "updated" : "created"}` });
+            setEditing(undefined);
             loadCustomers();
           }}
         />

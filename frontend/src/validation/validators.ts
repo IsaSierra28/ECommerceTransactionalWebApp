@@ -112,15 +112,18 @@ export interface AccountForm {
   phone: string;
 }
 
-export function validateAccount(form: AccountForm, type: "VENDOR" | "CUSTOMER"): FormErrors {
+// isEdit = true when an existing account is edited: the username and password are not changed there
+export function validateAccount(form: AccountForm, type: "VENDOR" | "CUSTOMER", isEdit = false): FormErrors {
   const errors: FormErrors = {};
 
-  if (form.username.trim().length < 3 || form.username.length > 50) {
-    errors.username = "Username must have between 3 and 50 characters";
+  if (!isEdit) {
+    if (form.username.trim().length < 3 || form.username.length > 50) {
+      errors.username = "Username must have between 3 and 50 characters";
+    }
+    if (form.password.length < 8) errors.password = "Password must have at least 8 characters";
   }
   if (!form.email.trim()) errors.email = "Email is required";
   else if (!EMAIL_REGEX.test(form.email)) errors.email = "Email is not valid";
-  if (form.password.length < 8) errors.password = "Password must have at least 8 characters";
   if (form.phone.length > 20) errors.phone = "Phone must have at most 20 characters";
 
   if (type === "VENDOR") {

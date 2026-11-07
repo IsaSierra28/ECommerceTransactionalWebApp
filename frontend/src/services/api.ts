@@ -93,6 +93,7 @@ export const deleteProduct = (id: number) => request<void>(`/products/${id}`, { 
 // ---------- Vendors (ADMIN) ----------
 export const getVendors = () => request<Vendor[]>("/vendors");
 export const createVendor = (vendor: object) => request<Vendor>("/vendors", post(vendor));
+export const updateVendor = (id: number, vendor: object) => request<Vendor>(`/vendors/${id}`, put(vendor));
 export const activateVendor = (id: number) => request<Vendor>(`/vendors/${id}/activate`, { method: "PATCH" });
 export const deactivateVendor = (id: number) => request<Vendor>(`/vendors/${id}/deactivate`, { method: "PATCH" });
 export const deleteVendor = (id: number) => request<void>(`/vendors/${id}`, { method: "DELETE" });
@@ -100,6 +101,7 @@ export const deleteVendor = (id: number) => request<void>(`/vendors/${id}`, { me
 // ---------- Customers ----------
 export const getCustomers = () => request<Customer[]>("/customers");
 export const createCustomer = (customer: object) => request<Customer>("/customers", post(customer));
+export const updateCustomer = (id: number, customer: object) => request<Customer>(`/customers/${id}`, put(customer));
 export const deleteCustomer = (id: number) => request<void>(`/customers/${id}`, { method: "DELETE" });
 export const getMyAddresses = () => request<Address[]>("/customers/me/addresses");
 

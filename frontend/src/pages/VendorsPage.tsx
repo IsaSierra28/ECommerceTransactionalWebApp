@@ -7,7 +7,8 @@ import AccountFormModal from "../components/AccountFormModal";
 // ADMIN: list, create, activate/deactivate and delete vendors
 function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  // Form: undefined = closed, null = new vendor, Vendor = edit
+  const [editing, setEditing] = useState<Vendor | null | undefined>(undefined);
   const [message, setMessage] = useState<{ type: "success" | "danger"; text: string } | null>(null);
 
   const loadVendors = () => {
@@ -44,7 +45,7 @@ function VendorsPage() {
     <Container>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Vendors</h1>
-        <Button onClick={() => setShowForm(true)}>+ New vendor</Button>
+        <Button onClick={() => setEditing(null)}>+ New vendor</Button>
       </div>
 
       {message && <Alert variant={message.type} dismissible onClose={() => setMessage(null)}>{message.text}</Alert>}
@@ -65,6 +66,7 @@ function VendorsPage() {
                 <Button size="sm" variant={v.active ? "outline-warning" : "outline-success"} onClick={() => toggleActive(v)}>
                   {v.active ? "Deactivate" : "Activate"}
                 </Button>
+                <Button size="sm" variant="outline-primary" onClick={() => setEditing(v)}>Edit</Button>
                 <Button size="sm" variant="outline-danger" onClick={() => handleDelete(v)}>Delete</Button>
               </td>
             </tr>
@@ -72,13 +74,14 @@ function VendorsPage() {
         </tbody>
       </Table>
 
-      {showForm && (
+      {editing !== undefined && (
         <AccountFormModal
           type="VENDOR"
-          onClose={() => setShowForm(false)}
+          account={editing}
+          onClose={() => setEditing(undefined)}
           onSaved={() => {
-            setShowForm(false);
-            setMessage({ type: "success", text: "The vendor was created" });
+            setMessage({ type: "success", text: `The vendor was ${editing ? "updated" : "created"}` });
+            setEditing(undefined);
             loadVendors();
           }}
         />

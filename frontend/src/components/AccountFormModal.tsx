@@ -1,23 +1,36 @@
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Alert, Button, Form, Modal } from "react-bootstrap";
-import { ApiException, createCustomer, createVendor } from "../services/api";
+import { ApiException, createCustomer, createVendor, updateCustomer, updateVendor } from "../services/api";
+import type { Customer, Vendor } from "../types";
 import { hasErrors, validateAccount } from "../validation/validators";
 import type { AccountForm, FormErrors } from "../validation/validators";
 
 interface AccountFormModalProps {
   type: "VENDOR" | "CUSTOMER";
+  account?: Vendor | Customer | null;   // null or missing = create, otherwise = edit
   onClose: () => void;
   onSaved: () => void;
 }
 
-const emptyForm: AccountForm = {
-  username: "", email: "", password: "", companyName: "", firstName: "", lastName: "", phone: "",
-};
+function toForm(account?: Vendor | Customer | null): AccountForm {
+  return {
+    username: account?.username ?? "",
+    email: account?.email ?? "",
+    password: "",
+    companyName: account && "companyName" in account ? account.companyName : "",
+    firstName: account && "firstName" in account ? account.firstName : "",
+    lastName: account && "lastName" in account ? account.lastName : "",
+    phone: account?.phone ?? "",
+  };
+}
 
-// Form used by the ADMIN to create a vendor or a customer (with their user account)
-function AccountFormModal({ type, onClose, onSaved }: AccountFormModalProps) {
-  const [form, setForm] = useState<AccountForm>(emptyForm);
+// Form used by the ADMIN to create or edit a vendor or a customer.
+// Create: also creates the user account (username + password).
+// Edit: only the email, the name/company and the phone can be changed.
+function AccountFormModal({ type, account, onClose, onSaved }: AccountFormModalProps) {
+  const isEdit = !!account;
+  const [form, setForm] = useState<AccountForm>(toForm(account));
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -28,24 +41,25 @@ function AccountFormModal({ type, onClose, onSaved }: AccountFormModalProps) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const validationErrors = validateAccount(form, type);
+    const validationErrors = validateAccount(form, type, isEdit);
     setErrors(validationErrors);
     setServerError("");
     if (hasErrors(validationErrors)) return;
 
-    const common = {
-      username: form.username.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      phone: form.phone.trim() || null,
-    };
+    const details = type === "VENDOR"
+      ? { companyName: form.companyName.trim() }
+      : { firstName: form.firstName.trim(), lastName: form.lastName.trim() };
+    const data = { ...details, email: form.email.trim(), phone: form.phone.trim() || null };
 
     setSaving(true);
     try {
-      if (type === "VENDOR") {
-        await createVendor({ ...common, companyName: form.companyName.trim() });
+      if (isEdit && account) {
+        if (type === "VENDOR") await updateVendor(account.id, data);
+        else await updateCustomer(account.id, data);
       } else {
-        await createCustomer({ ...common, firstName: form.firstName.trim(), lastName: form.lastName.trim() });
+        const newAccount = { ...data, username: form.username.trim(), password: form.password };
+        if (type === "VENDOR") await createVendor(newAccount);
+        else await createCustomer(newAccount);
       }
       onSaved();
     } catch (error) {
@@ -67,20 +81,24 @@ function AccountFormModal({ type, onClose, onSaved }: AccountFormModalProps) {
     </Form.Group>
   );
 
+  const title = `${isEdit ? "Edit" : "New"} ${type === "VENDOR" ? "vendor" : "customer"}`;
+
   return (
     <Modal show onHide={onClose}>
       <Form noValidate onSubmit={handleSubmit}>
         <Modal.Header closeButton>
-          <Modal.Title>{type === "VENDOR" ? "New vendor" : "New customer"}</Modal.Title>
+          <Modal.Title>{title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {serverError && <Alert variant="danger">{serverError}</Alert>}
           {type === "VENDOR"
             ? input("companyName", "Company name")
             : <>{input("firstName", "First name")}{input("lastName", "Last name")}</>}
-          {input("username", "Username")}
+          {isEdit
+            ? <p className="text-muted small">Username: <strong>{account?.username}</strong></p>
+            : input("username", "Username")}
           {input("email", "Email", "email")}
-          {input("password", "Password", "password")}
+          {!isEdit && input("password", "Password", "password")}
           {input("phone", "Phone (optional)")}
         </Modal.Body>
         <Modal.Footer>
